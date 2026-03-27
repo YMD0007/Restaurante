@@ -165,6 +165,33 @@ class AutenticacionYAccesoTests(BaseGestionTestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('index'))
 
+    def test_login_acepta_correo(self):
+        response = self.client.post(
+            reverse('login'),
+            {'username': 'cliente@example.com', 'password': 'ClaveSegura123'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('index'))
+
+    def test_login_superusuario_redirige_a_panel_admin(self):
+        response = self.client.post(
+            reverse('login'),
+            {'username': 'admin', 'password': 'AdminClave123'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('panel_admin'))
+
+    def test_login_superusuario_acepta_correo(self):
+        response = self.client.post(
+            reverse('login'),
+            {'username': 'admin@example.com', 'password': 'AdminClave123'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('panel_admin'))
+
     def test_login_invalido_muestra_error(self):
         response = self.client.post(
             reverse('login'),

@@ -3,10 +3,11 @@ from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.template.loader import get_template
-from django.contrib.auth import login
+from django.contrib.auth import authenticate, login as auth_login
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.mail import send_mail
+from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from xhtml2pdf import pisa
@@ -151,11 +152,39 @@ def registro(request):
             except:
                 pass
                 
-            login(request, user)
+            auth_login(request, user)
             return redirect('index')
     else:
         form = RegistroForm()
     return render(request, 'registration/registro.html', {'form': form})
+
+
+def login_personalizado(request):
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect('panel_admin')
+        return redirect('index')
+
+    if request.method == 'POST':
+        identificador = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+
+        username = identificador
+        if '@' in identificador:
+            usuario = User.objects.filter(email__iexact=identificador).first()
+            if usuario:
+                username = usuario.username
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            if user.is_superuser:
+                return redirect('panel_admin')
+            return redirect('index')
+
+        return render(request, 'registration/login.html', {'form_errors': True}, status=200)
+
+    return render(request, 'registration/login.html')
 
 # --- SIMULACIÓN DE COMPRA BLINDADA ---
 @login_required
