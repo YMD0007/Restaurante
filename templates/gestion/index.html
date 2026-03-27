@@ -1,0 +1,357 @@
+{% extends 'gestion/base.html' %}
+
+{% block content %}
+<style>
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.3), transparent 42%),
+            radial-gradient(circle at 20% 90%, rgba(250, 204, 130, 0.22), transparent 45%),
+            linear-gradient(125deg, #dc7d33 0%, #be5c23 45%, #8f4720 100%);
+        color: #fff;
+        padding: 3.6rem 1.4rem;
+        border-radius: 28px;
+        margin-bottom: 2rem;
+        box-shadow: 0 20px 50px rgba(158, 79, 30, 0.32);
+    }
+
+    .hero-section::after {
+        content: "";
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        top: -120px;
+        right: -70px;
+        border-radius: 50%;
+        border: 1px dashed rgba(255, 255, 255, 0.4);
+    }
+
+    .hero-kicker {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 999px;
+        font-size: 0.8rem;
+        padding: 0.34rem 0.8rem;
+        margin-bottom: 0.9rem;
+        letter-spacing: 0.3px;
+    }
+
+    .hero-title {
+        font-size: clamp(2rem, 6vw, 3.3rem);
+        margin-bottom: 0.4rem;
+    }
+
+    .hero-lead {
+        max-width: 690px;
+        margin: 0 auto 1.4rem;
+        opacity: 0.92;
+        font-size: 1.04rem;
+    }
+
+    .btn-hero {
+        border-radius: 999px;
+        border: none;
+        background: #fff;
+        color: #9d4f1d;
+        font-weight: 800;
+        padding: 0.75rem 1.3rem;
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .btn-hero:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(18, 23, 35, 0.2);
+        color: #7f3f19;
+    }
+
+    .filter-wrap {
+        border-radius: 18px;
+        border: 1px solid #e8dfd2;
+        background: #fff;
+        padding: 0.9rem;
+    }
+
+    .btn-category {
+        border-radius: 999px;
+        padding: 0.5rem 1.05rem;
+        font-weight: 700;
+        font-size: 0.92rem;
+        border-width: 1px;
+    }
+
+    .btn-category.btn-dark {
+        background: #25324a;
+        border-color: #25324a;
+    }
+
+    .product-card {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(232, 223, 210, 0.88);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        background: #fff;
+    }
+
+    .product-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 18px 40px rgba(25, 32, 46, 0.14);
+    }
+
+    .card-img-top {
+        height: 220px;
+        object-fit: cover;
+    }
+
+    .price-tag {
+        color: #2b7a60;
+        font-weight: 800;
+        font-size: 1.1rem;
+    }
+
+    .points-price-tag {
+        color: #8b4a1d;
+        font-weight: 800;
+        font-size: 0.9rem;
+        background: #fff3df;
+        border: 1px solid #f0d6af;
+        border-radius: 999px;
+        padding: 0.22rem 0.55rem;
+        white-space: nowrap;
+    }
+
+    .points-badge {
+        background: linear-gradient(140deg, #ffc764 0%, #f09e2a 100%);
+        color: #573204;
+        border-radius: 999px;
+        padding: 0.25rem 0.72rem;
+        font-size: 0.8rem;
+        font-weight: 800;
+        border: 1px solid rgba(255, 255, 255, 0.55);
+    }
+
+    .btn-order {
+        border-radius: 12px;
+        background: linear-gradient(130deg, #ea8e35 0%, #d46f25 100%);
+        border: none;
+        color: #fff;
+        font-weight: 800;
+        padding: 0.62rem 1rem;
+    }
+
+    .btn-order:hover {
+        color: #fff;
+        background: linear-gradient(130deg, #d97b28 0%, #c55d1f 100%);
+    }
+
+    .empty-state {
+        border: 1px dashed #d9cfbf;
+        border-radius: 18px;
+        background: #fff;
+    }
+
+    .pedido-modal .modal-content {
+        border: 1px solid #e8dfd2;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .pedido-modal .modal-header {
+        border-bottom: 0;
+        background: linear-gradient(130deg, #dc7d33 0%, #be5c23 100%);
+        color: #fff;
+    }
+
+    .pedido-modal .modal-header.completado {
+        background: linear-gradient(130deg, #2d8e63 0%, #1f6f4d 100%);
+    }
+
+    .pedido-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 0.9rem;
+        background: #fff3e5;
+        color: #bf5f23;
+        font-size: 1.8rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero-section {
+            border-radius: 20px;
+            padding: 2.4rem 1rem;
+        }
+    }
+</style>
+
+{% if messages %}
+    <div class="mb-4 feedback-box">
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <div class="d-none purchase-success" data-pedido-msg="{{ message|escape }}"></div>
+            {% else %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show surface" role="alert">
+                    <i class="bi bi-clock-history me-1"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="modal fade pedido-modal" id="pedidoPreparandoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="pedidoModalHeader">
+                <h5 class="modal-title fw-bold" id="pedidoModalTitle"><i class="bi bi-bag-check-fill me-1"></i> Pedido confirmado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <div class="pedido-icon" id="pedidoModalIconWrap">
+                    <i class="bi bi-clock-history" id="pedidoModalIcon"></i>
+                </div>
+                <h5 class="fw-bold" id="pedidoModalState">Tu pedido esta en preparacion</h5>
+                <p class="text-muted mb-0" id="pedidoPreparandoTexto">Estamos cocinando tu pedido. Te avisaremos cuando este listo.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="hero-section text-center">
+    <span class="hero-kicker"><i class="bi bi-stars"></i> Programa de fidelidad activo</span>
+    <h1 class="hero-title">Sabores con recompensa</h1>
+    <p class="hero-lead">Prueba la carta de la casa, suma puntos por cada pedido y canjea beneficios exclusivos de Sabores Leales.</p>
+    <a href="{% url 'descargar_menu_pdf' %}" class="btn btn-hero btn-lg shadow-sm">
+        <i class="bi bi-file-earmark-pdf-fill"></i> Ver Carta PDF
+    </a>
+</div>
+
+<div class="row mb-5">
+    <div class="col-12 d-flex justify-content-center flex-wrap gap-2 filter-wrap surface">
+        <a href="?" class="btn btn-category {% if not categoria_seleccionada %}btn-dark{% else %}btn-outline-dark{% endif %}">
+            <i class="bi bi-grid-fill me-1"></i> Todos
+        </a>
+        {% for cat in categorias %}
+            <a href="?categoria={{ cat.id }}" 
+               class="btn btn-category {% if categoria_seleccionada == cat.id %}btn-dark{% else %}btn-outline-dark{% endif %}">
+                {{ cat.nombre }}
+            </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for producto in productos %}
+    <div class="col">
+        <div class="card h-100 shadow-sm product-card">
+            <div class="position-relative">
+                {% if producto.imagen %}
+                    <img src="{{ producto.imagen.url }}" class="card-img-top" alt="{{ producto.nombre }}">
+                {% else %}
+                    <div class="bg-light text-muted d-flex align-items-center justify-content-center" style="height: 220px;">
+                        <i class="bi bi-image fs-1 opacity-25"></i>
+                    </div>
+                {% endif %}
+                <div class="position-absolute top-0 end-0 m-3">
+                    <span class="points-badge shadow-sm">
+                        <i class="bi bi-star-fill"></i> +{{ producto.puntos_otorgados|default:"0" }} pts
+                    </span>
+                </div>
+            </div>
+            
+            <div class="card-body px-4 pt-4 pb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h4 class="card-title fw-bold mb-0">{{ producto.nombre }}</h4>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="price-tag">${{ producto.precio|floatformat:0 }}</span>
+                        <span class="points-price-tag"><i class="bi bi-star-fill"></i> {{ producto.puntos_canje }} pts</span>
+                    </div>
+                </div>
+                <p class="card-text text-muted">{{ producto.descripcion|truncatechars:85 }}</p>
+            </div>
+            
+            <div class="card-footer bg-white border-0 px-4 pb-4">
+                <div class="d-grid">
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'realizar_pedido' producto.id %}" class="d-grid gap-2">
+                            {% csrf_token %}
+                            <button type="submit" name="metodo_pago" value="dinero" class="btn btn-order btn-lg shadow-sm w-100">
+                                Comprar con dinero
+                            </button>
+                            {% if puntos_usuario >= producto.puntos_canje %}
+                                <button type="submit" name="metodo_pago" value="puntos" class="btn btn-outline-warning fw-bold w-100" style="border-radius: 12px;">
+                                    Canjear con puntos
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-outline-secondary fw-bold w-100" style="border-radius: 12px;" disabled>
+                                    Te faltan {{ producto.puntos_faltantes }} pts
+                                </button>
+                            {% endif %}
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg fw-bold py-2" style="border-radius: 12px;">
+                            Entra para ganar puntos
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5">
+        <div class="empty-state py-5 px-3 surface">
+            <i class="bi bi-search display-1 text-muted opacity-25"></i>
+            <p class="text-muted mt-3 mb-0">No encontramos platos en esta categoría.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var successMessageNode = document.querySelector('.purchase-success');
+        if (!successMessageNode) return;
+
+        var modalElement = document.getElementById('pedidoPreparandoModal');
+        if (!modalElement || typeof bootstrap === 'undefined') return;
+
+        var customMessage = successMessageNode.getAttribute('data-pedido-msg');
+        var textNode = document.getElementById('pedidoPreparandoTexto');
+        var stateNode = document.getElementById('pedidoModalState');
+        var titleNode = document.getElementById('pedidoModalTitle');
+        var headerNode = document.getElementById('pedidoModalHeader');
+        var iconWrapNode = document.getElementById('pedidoModalIconWrap');
+        var iconNode = document.getElementById('pedidoModalIcon');
+        if (customMessage && textNode) {
+            textNode.textContent = customMessage;
+        }
+
+        var modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        var completedTimer = setTimeout(function () {
+            if (stateNode) stateNode.textContent = 'Pedido completado';
+            if (textNode) textNode.textContent = 'Tu pedido ya esta listo. Gracias por comprar en Sabores Leales.';
+            if (titleNode) titleNode.innerHTML = '<i class="bi bi-patch-check-fill me-1"></i> Pedido listo';
+            if (headerNode) headerNode.classList.add('completado');
+            if (iconWrapNode) {
+                iconWrapNode.style.background = '#e6f6ee';
+                iconWrapNode.style.color = '#1f6f4d';
+            }
+            if (iconNode) iconNode.className = 'bi bi-check2-circle';
+        }, 5000);
+
+        var closeTimer = setTimeout(function () {
+            modal.hide();
+        }, 7500);
+
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            clearTimeout(completedTimer);
+            clearTimeout(closeTimer);
+        }, { once: true });
+    });
+</script>
+{% endblock %}

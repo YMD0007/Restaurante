@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page { size: letter; margin: 1cm; }
+        body { font-family: Helvetica, Arial, sans-serif; color: #333; }
+        .header { text-align: center; border-bottom: 2px solid #e67e22; padding-bottom: 10px; }
+        .producto { margin-bottom: 16px; border-bottom: 0.5pt solid #eee; padding: 8px 0; }
+        .producto-table { width: 100%; border-collapse: collapse; }
+        .producto-img-col { width: 95px; vertical-align: top; }
+        .producto-info-col { vertical-align: top; }
+        .producto-img {
+            width: 85px;
+            height: 85px;
+            object-fit: cover;
+            border: 0.5pt solid #ddd;
+            border-radius: 6px;
+        }
+        .img-placeholder {
+            width: 85px;
+            height: 85px;
+            border: 0.5pt dashed #ccc;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 9px;
+            color: #999;
+            line-height: 85px;
+        }
+        .precio { color: #e67e22; font-weight: bold; float: right; }
+        .puntos { color: #27ae60; font-size: 10px; }
+        .nombre { font-weight: bold; }
+        .descripcion { font-size: 12px; color: #666; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Nuestra Carta</h1>
+        <p>Disfruta lo mejor de nuestra cocina</p>
+    </div>
+
+    {% for p in productos %}
+    <div class="producto">
+        <table class="producto-table">
+            <tr>
+                <td class="producto-img-col">
+                    {% if p.imagen %}
+                        <img src="{{ p.imagen.url }}" alt="{{ p.nombre }}" class="producto-img">
+                    {% else %}
+                        <div class="img-placeholder">Sin imagen</div>
+                    {% endif %}
+                </td>
+                <td class="producto-info-col">
+                    <span class="precio">${{ p.precio|floatformat:0 }}</span>
+                    <div class="nombre">{{ p.nombre }}</div>
+                    <div class="descripcion">{{ p.descripcion }}</div>
+                    <div class="puntos">Ganas {{ p.puntos_otorgados }} puntos con este plato</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    {% endfor %}
+</body>
+</html>

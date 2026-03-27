@@ -1,0 +1,118 @@
+{% extends 'gestion/base.html' %}
+
+{% block content %}
+<style>
+    .register-shell {
+        min-height: 78vh;
+        display: grid;
+        place-items: center;
+    }
+
+    .register-card {
+        width: min(540px, 100%);
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid #e8dfd2;
+        box-shadow: 0 22px 48px rgba(18, 23, 35, 0.12);
+    }
+
+    .reg-header {
+        background:
+            radial-gradient(circle at 80% 25%, rgba(255, 255, 255, 0.2), transparent 42%),
+            linear-gradient(135deg, #dc7d33 0%, #b65a23 55%, #9c4b20 100%);
+        color: white;
+        padding: 1.8rem 1.3rem;
+        text-align: center;
+    }
+
+    .form-zone input {
+        border-radius: 12px !important;
+        border: 1px solid #d8cfbf !important;
+        padding: 0.68rem 0.85rem !important;
+        width: 100%;
+        margin-bottom: 0.35rem;
+    }
+
+    .form-zone input:focus {
+        border-color: #d87329 !important;
+        box-shadow: 0 0 0 0.2rem rgba(216, 115, 41, 0.15);
+        outline: none;
+    }
+
+    .form-zone label {
+        font-weight: 600;
+        color: #2c3448;
+        margin-bottom: 0.35rem;
+        display: block;
+    }
+
+    .helptext {
+        font-size: 0.78rem;
+        color: #6d7486;
+        display: block;
+        margin-bottom: 0.35rem;
+    }
+
+    .btn-register {
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(130deg, #dc7d33 0%, #be5c23 100%);
+        color: #fff;
+        font-weight: 800;
+        padding: 0.75rem 1rem;
+    }
+
+    .btn-register:hover {
+        color: #fff;
+        background: linear-gradient(130deg, #cd7027 0%, #a8501f 100%);
+    }
+</style>
+
+<div class="register-shell">
+    <div class="register-card surface">
+            <div class="reg-header">
+                <i class="bi bi-person-plus-fill display-4"></i>
+                <h2 class="fw-bold mt-2">Unete al club</h2>
+                <p class="mb-0 small">Empieza a ganar puntos en cada bocado</p>
+            </div>
+            
+            <div class="card-body p-4 p-lg-5 form-zone">
+                <form method="post" novalidate class="d-grid gap-2">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger small p-2">
+                            Por favor, corrige los errores indicados.
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div>
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <span class="helptext">{{ field.help_text|safe }}</span>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-register btn-lg shadow-sm">
+                            CREAR MI CUENTA
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <hr class="text-muted">
+                    <p class="mb-0">Ya eres parte de la familia?
+                        <a href="{% url 'login' %}" class="text-decoration-none fw-bold" style="color: #be5c23;">Inicia sesion</a>
+                    </p>
+                </div>
+            </div>
+    </div>
+</div>
+{% endblock %}

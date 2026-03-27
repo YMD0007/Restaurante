@@ -1,0 +1,145 @@
+{% extends 'gestion/base.html' %}
+
+{% block content %}
+<style>
+    .panel-head {
+        background: linear-gradient(135deg, #f8eadc 0%, #fff7ef 100%);
+        border: 1px solid #e9ddcb;
+        border-radius: 20px;
+        padding: 1rem 1.1rem;
+    }
+
+    .panel-wrap {
+        border: 1px solid #e8dfd2;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .table thead {
+        background: #f2ede4;
+    }
+
+    .table thead th {
+        color: #2b3348;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        border-bottom-width: 0;
+    }
+
+    .avatar-pill {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(130deg, #e08a3a 0%, #bc5f23 100%);
+        color: #fff;
+        font-weight: 800;
+    }
+
+    .points-tag {
+        border-radius: 999px;
+        padding: 0.42rem 0.72rem;
+        font-weight: 800;
+        font-size: 0.82rem;
+    }
+</style>
+
+<div class="container mt-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4 panel-head">
+        <h2 class="fw-bold mb-0"><i class="bi bi-people-fill"></i> Gestion de clientes leales</h2>
+        <span class="badge text-bg-dark">Total clientes: {{ clientes.count }}</span>
+    </div>
+
+    <div class="card shadow-sm panel-wrap mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1"><i class="bi bi-tag-fill"></i> Categorias de comida</h5>
+                    <p class="text-muted small mb-0">Crea nuevas categorias desde este panel.</p>
+                </div>
+                <form method="post" class="d-flex gap-2 flex-wrap">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crear_categoria">
+                    <input type="text" name="nombre_categoria" class="form-control" placeholder="Ej: Postres" required>
+                    <button type="submit" class="btn btn-dark">
+                        <i class="bi bi-plus-circle"></i> Crear categoria
+                    </button>
+                </form>
+            </div>
+
+            {% if categorias %}
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    {% for categoria in categorias %}
+                        <span class="badge rounded-pill text-bg-secondary">{{ categoria.nombre }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow-sm panel-wrap">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Usuario</th>
+                            <th>Email</th>
+                            <th class="text-center">Puntos acumulados</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perfil in clientes %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-pill me-2">
+                                        {{ perfil.user.username|slice:":1"|upper }}
+                                    </div>
+                                    <span class="fw-bold">{{ perfil.user.username }}</span>
+                                </div>
+                            </td>
+                            <td>{{ perfil.user.email }}</td>
+                            <td class="text-center">
+                                <span class="badge points-tag {% if perfil.puntos > 100 %}text-bg-success{% else %}text-bg-primary{% endif %}">
+                                    {{ perfil.puntos }} pts
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="/admin/auth/user/{{ perfil.user.id }}/change/" target="_blank" class="btn btn-sm btn-outline-secondary me-1">
+                                    <i class="bi bi-pencil"></i> Editar
+                                </a>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="reset_puntos">
+                                    <input type="hidden" name="perfil_id" value="{{ perfil.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Se reiniciaran los puntos de este cliente. Deseas continuar?');">
+                                        <i class="bi bi-arrow-counterclockwise"></i> Resetear
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5 text-muted">Aun no hay clientes registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
