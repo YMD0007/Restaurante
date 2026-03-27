@@ -44,6 +44,34 @@
         font-weight: 800;
         font-size: 0.82rem;
     }
+
+    .panel-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 992px) {
+        .panel-grid {
+            grid-template-columns: 1.05fr 1.35fr;
+            align-items: start;
+        }
+    }
+
+    .mini-thumb {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #e8dfd2;
+    }
+
+    .product-editor summary {
+        list-style: none;
+    }
+
+    .product-editor summary::-webkit-details-marker {
+        display: none;
+    }
 </style>
 
 <div class="container mt-4">
@@ -61,30 +89,200 @@
         <span class="badge text-bg-dark">Total clientes: {{ clientes.count }}</span>
     </div>
 
-    <div class="card shadow-sm panel-wrap mb-4">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div>
-                    <h5 class="fw-bold mb-1"><i class="bi bi-tag-fill"></i> Categorias de comida</h5>
-                    <p class="text-muted small mb-0">Crea nuevas categorias desde este panel.</p>
+    <div class="panel-grid mb-4">
+        <div class="card shadow-sm panel-wrap h-100">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div>
+                        <h5 class="fw-bold mb-1"><i class="bi bi-tag-fill"></i> Categorias de comida</h5>
+                        <p class="text-muted small mb-0">Crea nuevas categorias desde este panel.</p>
+                    </div>
+                    <form method="post" class="d-flex gap-2 flex-wrap">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="crear_categoria">
+                        <input type="text" name="nombre_categoria" class="form-control" placeholder="Ej: Postres" required>
+                        <button type="submit" class="btn btn-dark">
+                            <i class="bi bi-plus-circle"></i> Crear categoria
+                        </button>
+                    </form>
                 </div>
-                <form method="post" class="d-flex gap-2 flex-wrap">
+
+                {% if categorias %}
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        {% for categoria in categorias %}
+                            <span class="badge rounded-pill text-bg-secondary">{{ categoria.nombre }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm panel-wrap h-100">
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    <h5 class="fw-bold mb-1"><i class="bi bi-bag-plus-fill"></i> Crear producto</h5>
+                    <p class="text-muted small mb-0">Agrega productos y asignales la categoria que quieras. La foto es opcional.</p>
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="row g-3">
                     {% csrf_token %}
-                    <input type="hidden" name="action" value="crear_categoria">
-                    <input type="text" name="nombre_categoria" class="form-control" placeholder="Ej: Postres" required>
-                    <button type="submit" class="btn btn-dark">
-                        <i class="bi bi-plus-circle"></i> Crear categoria
-                    </button>
+                    <input type="hidden" name="action" value="crear_producto">
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombre</label>
+                        <input type="text" name="nombre_producto" class="form-control" placeholder="Ej: Lasaña mixta" required>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Categoria</label>
+                        <select name="categoria_id" class="form-select" required>
+                            <option value="">Selecciona una categoria</option>
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Descripcion</label>
+                        <textarea name="descripcion_producto" class="form-control" rows="3" placeholder="Describe el plato, bebida o combo" required></textarea>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Precio</label>
+                        <input type="number" name="precio_producto" class="form-control" min="1" step="0.01" placeholder="Ej: 18000" required>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Puntos otorgados</label>
+                        <input type="number" name="puntos_otorgados" class="form-control" min="0" step="1" placeholder="10">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Foto opcional</label>
+                        <input type="file" name="imagen_producto" class="form-control" accept="image/*">
+                    </div>
+
+                    <div class="col-12 d-grid d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-dark px-4">
+                            <i class="bi bi-plus-circle"></i> Crear producto
+                        </button>
+                    </div>
                 </form>
             </div>
+        </div>
+    </div>
 
-            {% if categorias %}
-                <div class="d-flex flex-wrap gap-2 mt-3">
-                    {% for categoria in categorias %}
-                        <span class="badge rounded-pill text-bg-secondary">{{ categoria.nombre }}</span>
-                    {% endfor %}
+    <div class="card shadow-sm panel-wrap mb-4">
+        <div class="card-body p-0">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 px-4 py-3 border-bottom">
+                <div>
+                    <h5 class="fw-bold mb-1"><i class="bi bi-grid-3x3-gap-fill"></i> Productos creados</h5>
+                    <p class="text-muted small mb-0">Vista rapida del catalogo disponible en el sistema.</p>
                 </div>
-            {% endif %}
+                <span class="badge text-bg-light border">Total productos: {{ productos.count }}</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Producto</th>
+                            <th>Categoria</th>
+                            <th>Precio</th>
+                            <th>Puntos</th>
+                            <th class="text-center pe-4">Foto</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">{{ producto.nombre }}</td>
+                            <td>{{ producto.categoria.nombre }}</td>
+                            <td>${{ producto.precio }}</td>
+                            <td>{{ producto.puntos_otorgados }} pts</td>
+                            <td class="text-center pe-4">
+                                {% if producto.imagen %}
+                                    <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="mini-thumb">
+                                {% else %}
+                                    <span class="text-muted small">Sin foto</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <details class="product-editor d-inline-block text-start">
+                                    <summary class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </summary>
+                                    <div class="card shadow-sm mt-2" style="width: min(560px, 92vw);">
+                                        <div class="card-body">
+                                            <form method="post" enctype="multipart/form-data" class="row g-3">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="editar_producto">
+                                                <input type="hidden" name="producto_id" value="{{ producto.id }}">
+
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Nombre</label>
+                                                    <input type="text" name="nombre_producto" class="form-control" value="{{ producto.nombre }}" required>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold">Categoria</label>
+                                                    <select name="categoria_id" class="form-select" required>
+                                                        {% for categoria in categorias %}
+                                                            <option value="{{ categoria.id }}" {% if categoria.id == producto.categoria.id %}selected{% endif %}>{{ categoria.nombre }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <label class="form-label fw-semibold">Descripcion</label>
+                                                    <textarea name="descripcion_producto" class="form-control" rows="3" required>{{ producto.descripcion }}</textarea>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Precio</label>
+                                                    <input type="number" name="precio_producto" class="form-control" min="1" step="0.01" value="{{ producto.precio }}" required>
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Puntos otorgados</label>
+                                                    <input type="number" name="puntos_otorgados" class="form-control" min="0" step="1" value="{{ producto.puntos_otorgados }}">
+                                                </div>
+
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-semibold">Nueva foto opcional</label>
+                                                    <input type="file" name="imagen_producto" class="form-control" accept="image/*">
+                                                </div>
+
+                                                <div class="col-12 d-flex justify-content-end">
+                                                    <button type="submit" class="btn btn-dark btn-sm">
+                                                        <i class="bi bi-save"></i> Guardar cambios
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="eliminar_producto">
+                                    <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Se eliminara este producto del catalogo. Deseas continuar?');">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">Aun no hay productos creados desde este panel.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

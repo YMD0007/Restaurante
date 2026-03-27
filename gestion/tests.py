@@ -8,6 +8,7 @@ from unittest.mock import patch
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import AnonymousUser, User
 from django.contrib.messages import get_messages
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
@@ -274,6 +275,100 @@ class PanelAdminTests(BaseGestionTestCase):
         )
 
         self.assertContains(response, 'Esa categoria ya existe.')
+
+    def test_panel_admin_crea_producto_sin_foto(self):
+        response = self.client.post(
+            reverse('panel_admin'),
+            {
+                'action': 'crear_producto',
+                'nombre_producto': 'Lasana mixta',
+                'descripcion_producto': 'Pasta gratinada con salsa de la casa.',
+                'precio_producto': '32000',
+                'puntos_otorgados': '25',
+                'categoria_id': str(self.categoria.id),
+            },
+            follow=True,
+        )
+
+        producto = Producto.objects.get(nombre='Lasana mixta')
+        self.assertEqual(producto.categoria, self.categoria)
+        self.assertFalse(bool(producto.imagen))
+        self.assertContains(response, 'creado correctamente')
+
+    def test_panel_admin_crea_producto_con_foto(self):
+        imagen = SimpleUploadedFile(
+            'combo.jpg',
+            b'filecontent',
+            content_type='image/jpeg',
+        )
+
+        self.client.post(
+            reverse('panel_admin'),
+            {
+                'action': 'crear_producto',
+                'nombre_producto': 'Combo familiar',
+                'descripcion_producto': 'Incluye pizza, bebida y postre.',
+                'precio_producto': '54000',
+                'puntos_otorgados': '40',
+                'categoria_id': str(self.categoria.id),
+                'imagen_producto': imagen,
+            },
+        )
+
+        producto = Producto.objects.get(nombre='Combo familiar')
+        self.assertTrue(bool(producto.imagen))
+
+    def test_panel_admin_producto_exige_categoria(self):
+        response = self.client.post(
+            reverse('panel_admin'),
+            {
+                'action': 'crear_producto',
+                'nombre_producto': 'Malteada',
+                'descripcion_producto': 'Bebida fria',
+                'precio_producto': '12000',
+                'puntos_otorgados': '12',
+                'categoria_id': '',
+            },
+            follow=True,
+        )
+
+        self.assertFalse(Producto.objects.filter(nombre='Malteada').exists())
+        self.assertContains(response, 'Completa nombre, descripcion, precio y categoria para guardar el producto.')
+
+    def test_panel_admin_edita_producto(self):
+        response = self.client.post(
+            reverse('panel_admin'),
+            {
+                'action': 'editar_producto',
+                'producto_id': str(self.producto.id),
+                'nombre_producto': 'Pizza premium',
+                'descripcion_producto': 'Pizza artesanal con ingredientes extra.',
+                'precio_producto': '29000',
+                'puntos_otorgados': '45',
+                'categoria_id': str(self.otra_categoria.id),
+            },
+            follow=True,
+        )
+
+        self.producto.refresh_from_db()
+        self.assertEqual(self.producto.nombre, 'Pizza premium')
+        self.assertEqual(self.producto.categoria, self.otra_categoria)
+        self.assertEqual(str(self.producto.precio), '29000.00')
+        self.assertEqual(self.producto.puntos_otorgados, 45)
+        self.assertContains(response, 'actualizado correctamente')
+
+    def test_panel_admin_elimina_producto(self):
+        response = self.client.post(
+            reverse('panel_admin'),
+            {
+                'action': 'eliminar_producto',
+                'producto_id': str(self.otro_producto.id),
+            },
+            follow=True,
+        )
+
+        self.assertFalse(Producto.objects.filter(id=self.otro_producto.id).exists())
+        self.assertContains(response, 'eliminado correctamente')
 
 
 class PedidoSimuladoTests(BaseGestionTestCase):

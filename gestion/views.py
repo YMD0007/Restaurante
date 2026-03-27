@@ -26,6 +26,43 @@ def calcular_puntos_canje(producto):
     nombre_producto = (producto.nombre or '').strip().lower()
     return PUNTOS_CANJE_PERSONALIZADOS.get(nombre_producto, max(1, int(producto.precio / 1000)))
 
+
+def procesar_datos_producto(request):
+    nombre_producto = request.POST.get('nombre_producto', '').strip()
+    descripcion_producto = request.POST.get('descripcion_producto', '').strip()
+    precio_producto = request.POST.get('precio_producto', '').strip()
+    puntos_otorgados = request.POST.get('puntos_otorgados', '').strip()
+    categoria_id = request.POST.get('categoria_id', '').strip()
+    imagen_producto = request.FILES.get('imagen_producto')
+
+    if not nombre_producto or not descripcion_producto or not precio_producto or not categoria_id:
+        return None, None, 'Completa nombre, descripcion, precio y categoria para guardar el producto.'
+
+    categoria = Categoria.objects.filter(id=categoria_id).first()
+    if categoria is None:
+        return None, None, 'Selecciona una categoria valida para el producto.'
+
+    try:
+        precio_valor = float(precio_producto)
+        puntos_valor = int(puntos_otorgados) if puntos_otorgados else 10
+    except ValueError:
+        return None, None, 'El precio y los puntos deben ser valores numericos validos.'
+
+    if precio_valor <= 0:
+        return None, None, 'El precio del producto debe ser mayor a cero.'
+
+    if puntos_valor < 0:
+        return None, None, 'Los puntos otorgados no pueden ser negativos.'
+
+    datos_producto = {
+        'categoria': categoria,
+        'nombre': nombre_producto,
+        'descripcion': descripcion_producto,
+        'precio': precio_producto,
+        'puntos_otorgados': puntos_valor,
+    }
+    return datos_producto, imagen_producto, None
+
 # --- FORMULARIO PERSONALIZADO DE REGISTRO ---
 class RegistroForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -103,12 +140,47 @@ def panel_admin_puntos(request):
                 Categoria.objects.create(nombre=nombre_categoria)
                 messages.success(request, f"Categoria '{nombre_categoria}' creada correctamente.")
 
+        elif action == 'crear_producto':
+            datos_producto, imagen_producto, error = procesar_datos_producto(request)
+            if error or not datos_producto:
+                messages.error(request, error)
+            else:
+                producto = Producto.objects.create(**datos_producto, imagen=imagen_producto)
+                messages.success(request, f"Producto '{producto.nombre}' creado correctamente.")
+
+        elif action == 'editar_producto':
+            producto_id = request.POST.get('producto_id')
+            producto = get_object_or_404(Producto, id=producto_id)
+            datos_producto, imagen_producto, error = procesar_datos_producto(request)
+
+            if error or not datos_producto:
+                messages.error(request, error)
+            else:
+                for campo, valor in datos_producto.items():
+                    setattr(producto, campo, valor)
+                if imagen_producto:
+                    producto.imagen = imagen_producto
+                producto.save()
+                messages.success(request, f"Producto '{producto.nombre}' actualizado correctamente.")
+
+        elif action == 'eliminar_producto':
+            producto_id = request.POST.get('producto_id')
+            producto = get_object_or_404(Producto, id=producto_id)
+            nombre_producto = producto.nombre
+            producto.delete()
+            messages.success(request, f"Producto '{nombre_producto}' eliminado correctamente.")
+
         return redirect('panel_admin')
 
     # Obtenemos todos los perfiles ordenados por los que tienen más puntos
     clientes = PerfilCliente.objects.all().order_by('-puntos')
     categorias = Categoria.objects.all().order_by('nombre')
-    return render(request, 'gestion/admin_puntos.html', {'clientes': clientes, 'categorias': categorias})
+    productos = Producto.objects.select_related('categoria').all().order_by('categoria__nombre', 'nombre')
+    return render(
+        request,
+        'gestion/admin_puntos.html',
+        {'clientes': clientes, 'categorias': categorias, 'productos': productos},
+    )
 
 # --- GENERACIÓN DE PDF ---
 def descargar_menu_pdf(request):
